@@ -17,14 +17,14 @@ var frequency = "";
 var currentDate;
 var currentTime;
 
-function update() {
+function updateTime() {
     currentDate = moment();
     currentTime.html(currentDate.format("HH:mm:ss"));
 }
 
 $(document).ready(function () {
     currentTime = $("#time");
-    setInterval(update, 100);
+    setInterval(updateTime, 100);
 })
 
 $("#addTrain").on("click", function (event) {
@@ -39,8 +39,6 @@ $("#addTrain").on("click", function (event) {
     $("#firstValue").val("");
     $("#frequencyValue").val("");
 
-
-
     database.ref().push({
         name: name,
         destination: destination,
@@ -49,24 +47,27 @@ $("#addTrain").on("click", function (event) {
     })
 })
 
-database.ref().on("child_added", function (snapshot) {
-    var sv = snapshot.val();
+var reset = setInterval(function () {
+    $("#trainData").html("");
+    database.ref().on("child_added", function time(snapshot) {  
+        var snapshot = snapshot.val();
+        var firstConverted = moment(snapshot.first, "HH:mm");
+        if (snapshot.first > moment().format("HH:mm")) {
+            var firstTrainMinutes = moment(firstConverted).diff(moment(), "minutes");
+            if (firstTrainMinutes >= 60) {
+                firstTrainMinutes = moment(firstConverted).fromNow(true);
 
-    console.log(sv.name);
-    console.log(sv.destination);
-    console.log(sv.first);
-    console.log(sv.frequency);
+                $("#trainData").append("<tr><td>" + snapshot.name + "</td><td>" + snapshot.destination + "</td><td>" + snapshot.frequency + "</td><td>" + snapshot.first + "</td><td>~" + firstTrainMinutes + "</td></tr>");
+            } else {
+                $("#trainData").append("<tr><td>" + snapshot.name + "</td><td>" + snapshot.destination + "</td><td>" + snapshot.frequency + "</td><td>" + snapshot.first + "</td><td>" + firstTrainMinutes + "</td></tr>");
+            }
+        } else {
+            var timeDiff = moment(currentDate).diff(moment(firstConverted), "minutes");
+            var remaining = timeDiff % snapshot.frequency;
+            var minutesLeft = snapshot.frequency - remaining;
+            var nextTrain = moment(currentDate).add(minutesLeft, "minutes");
 
-    var firstConverted = moment(sv.first, "HH:mm").subtract(1, "years");
-    console.log(firstConverted);
-    var timeDiff = moment(currentDate).diff(moment(firstConverted), "minutes");
-    console.log("difference: " + timeDiff)
-    var remaining = timeDiff % sv.frequency;
-    console.log(remaining);
-    var minutesLeft = sv.frequency - remaining;
-    console.log(minutesLeft)
-    var nextTrain = moment(currentDate).add(minutesLeft, "minutes");
-    console.log(nextTrain);
-
-    $("#trainData").append("<tr><td>" + sv.name + "</td><td>" + sv.destination + "</td><td>" + sv.frequency + "</td><td>" + nextTrain.format("HH:mm") + "</td><td>" + minutesLeft + "</td></tr>");
+            $("#trainData").append("<tr><td>" + snapshot.name + "</td><td>" + snapshot.destination + "</td><td>" + snapshot.frequency + "</td><td>" + nextTrain.format("HH:mm") + "</td><td>" + minutesLeft + "</td></tr>");
+        }
+    })
 })
