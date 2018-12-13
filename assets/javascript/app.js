@@ -24,7 +24,7 @@ function updateTime() {
 
 $(document).ready(function () {
     currentTime = $("#time");
-    setInterval(updateTime, 100);
+    setInterval(updateTime, 1000);
 })
 
 $("#addTrain").on("click", function (event) {
@@ -55,9 +55,9 @@ var reset = setInterval(function () {
         if (snapshot.first > moment().format("HH:mm")) {
             var firstTrainMinutes = moment(firstConverted).diff(moment(), "minutes");
             if (firstTrainMinutes >= 60) {
-                firstTrainMinutes = moment(firstConverted).fromNow(true);
-
-                $("#trainData").append("<tr><td>" + snapshot.name + "</td><td>" + snapshot.destination + "</td><td>" + snapshot.frequency + "</td><td>" + snapshot.first + "</td><td>~" + firstTrainMinutes + "</td></tr>");
+                firstTrainHours = firstTrainMinutes;
+                firstTrainHours = moment(firstConverted).fromNow(true);
+                $("#trainData").append("<tr><td>" + snapshot.name + "</td><td>" + snapshot.destination + "</td><td>" + snapshot.frequency + "</td><td>" + snapshot.first + "</td><td>~" + firstTrainHours + "</td></tr>");
             } else {
                 $("#trainData").append("<tr><td>" + snapshot.name + "</td><td>" + snapshot.destination + "</td><td>" + snapshot.frequency + "</td><td>" + snapshot.first + "</td><td>" + firstTrainMinutes + "</td></tr>");
             }
@@ -66,8 +66,7 @@ var reset = setInterval(function () {
             var remaining = timeDiff % snapshot.frequency;
             var minutesLeft = snapshot.frequency - remaining;
             var nextTrain = moment(currentDate).add(minutesLeft, "minutes");
-
             $("#trainData").append("<tr><td>" + snapshot.name + "</td><td>" + snapshot.destination + "</td><td>" + snapshot.frequency + "</td><td>" + nextTrain.format("HH:mm") + "</td><td>" + minutesLeft + "</td></tr>");
         }
     })
-})
+}, 1000)
